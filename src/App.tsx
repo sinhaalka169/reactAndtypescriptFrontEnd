@@ -3,6 +3,8 @@ import { Container, Typography } from '@material-ui/core';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import { Task } from './types/Task';
+import SignupForm from './components/SignupForm';
+import LoginForm from './components/LoginForm';
 import { fetchTodos, createTodo, deleteTodo, completeTodo, updateTodo } from './services/api';
 import EditDialog from './components/EditDialog';
 
@@ -11,6 +13,8 @@ const App: React.FC = () => {
 
   const [editOpen, setEditOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [view, setView] = useState<'signup' | 'login'>('signup');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!localStorage.getItem('token'));
 
   useEffect(() => {
     fetchTodos().then((res) => setTasks(res.data));
@@ -52,19 +56,37 @@ const App: React.FC = () => {
 
   return (
     <Container maxWidth="sm">
-      <h2>
-        To-Do List
-      </h2>
-      <TaskForm onAdd={handleAdd} />
-      <TaskList tasks={tasks} onDelete={handleDelete} onComplete={handleComplete} onEdit={handleEdit}/>
-      <EditDialog
-  open={editOpen}
-  task={selectedTask}
-  onClose={() => setEditOpen(false)}
-  onSave={handleSaveEdit}
-/>
+      {!isLoggedIn ? (
+        <div>
+          <button onClick={() => setView('signup')}>Signup</button>
+          <button onClick={() => setView('login')}>Login</button>
+          {view === 'signup' ? (
+            <SignupForm />
+          ) : (
+            <LoginForm onLoginSuccess={() => setIsLoggedIn(true)} />
+          )}
+        </div>
+      ) : (
+        <>
+          <h2>To-Do List</h2>
+          <TaskForm onAdd={handleAdd} />
+          <TaskList
+            tasks={tasks}
+            onDelete={handleDelete}
+            onComplete={handleComplete}
+            onEdit={handleEdit}
+          />
+          <EditDialog
+            open={editOpen}
+            task={selectedTask}
+            onClose={() => setEditOpen(false)}
+            onSave={handleSaveEdit}
+          />
+        </>
+      )}
     </Container>
   );
+  
 };
 
 export default App;
